@@ -1,7 +1,7 @@
 <body>
   <div id="app"></div>
 </body>
-<!-- 属性渲染相关的核心逻辑 -->
+<!-- 更新dom的逻辑 -->
 <script>
 function createRenderer(options) {
   const {
@@ -61,7 +61,7 @@ function createRenderer(options) {
       unmount(n1)
       n1 = null
     }
-    const type = { n2 }
+    const { type }  = n2
 
     if (typeof type === 'string') {
       if (!n1) {
@@ -142,5 +142,5 @@ const newVnode = {
 // 更新操作
 setTimeout(() => {
   renderer.render(newVnode, document.querySelector('#app'))  
-}, 1000);
+}, 2000);
 </script>
