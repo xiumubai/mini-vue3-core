@@ -1,0 +1,78 @@
+<body></body>
+<!-- 无限递归循环 -->
+<script>
+const data = { num: 1 }
+const bucket = new WeakMap()
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    track(target, key)
+    // 返回属性值
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    trigger(target, key)
+  }
+})
+
+function track(target, key) {
+  if (!activeEffect) return
+  let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  }
+  deps.add(activeEffect)
+  activeEffect.deps.push(deps)
+}
+
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set(effects)
+    effectsToRun && effectsToRun.forEach(fn => fn())
+    // effects && effects.forEach(fn => fn())
+}
+
+let activeEffect // 当前正在执行的副作用函数
+const effectStack = []
+// 副作用函数
+function effect(fn) {
+  const effectFn = () => {
+    cleanUp(effectFn)
+    activeEffect = effectFn
+    effectStack.push(effectFn)
+    fn()
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
+  }
+  effectFn.deps = []
+  effectFn()
+}
+
+function cleanUp(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+
+// 调用
+effect(function effectFn() {
+  // 这里会导致栈溢出，因为在这个语句中，既会读取 obj.foo 的值，又会设置 obj.foo 的值，
+  obj.num = obj.num + 1
+})
+
+// setTimeout(() => {
+//   // obj.foo = false
+//   obj.bar = false
+// }, 2000)
+
+</script>

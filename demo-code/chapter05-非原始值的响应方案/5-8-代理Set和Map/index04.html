@@ -1,0 +1,18 @@
+<body>
+  代理 Set 和 Map的注意事项
+</body>
+<script>
+// 代理
+const s = new Set([1, 2, 3])
+const p = new Proxy(s, {
+  get(target, key, receiver) {
+    if (key === 'size') {
+      return Reflect.get(target, key, target)
+    }
+    return target[key].bind(target)
+  }
+})
+
+console.log(p.delete(1)); // true
+
+</script>

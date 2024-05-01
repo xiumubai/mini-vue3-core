@@ -1,0 +1,19 @@
+<body>
+  <div id="app"></div>
+</body>
+<script>
+const vnode = {
+  type: 'p',
+}
+const newVnode = {
+  type: 'input',
+}
+// 初次挂载
+renderer.render(vnode, document.getElementById('app'))
+// vnode为null，将触发卸载操作
+setTimeout(() => {
+  renderer.render(newVnode, document.getElementById('app'))
+}, 2000)
+
+// 当p更新为input，此时的操作为先卸载p，然后挂载input
+</script>

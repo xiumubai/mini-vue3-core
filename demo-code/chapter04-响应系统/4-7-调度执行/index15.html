@@ -1,0 +1,115 @@
+<body></body>
+<!-- 通过调度器还控制副作用函数的执行次数 -->
+<script>
+const data = { num: 1 }
+const bucket = new WeakMap()
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    track(target, key)
+    // 返回属性值
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    trigger(target, key)
+  }
+})
+
+function track(target, key) {
+  if (!activeEffect) return
+  let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  }
+  deps.add(activeEffect)
+  activeEffect.deps.push(deps)
+}
+
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set()
+    effects && effects.forEach(effectFn => {
+      // 如果trigger执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn)
+      }
+    })
+    effectsToRun && effectsToRun.forEach(effectFn => {
+      if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn)
+      } else {
+        effectFn()
+      }
+    })
+}
+
+let activeEffect // 当前正在执行的副作用函数
+const effectStack = []
+// 副作用函数
+function effect(fn, options = []) {
+  const effectFn = () => {
+    cleanUp(effectFn)
+    activeEffect = effectFn
+    effectStack.push(effectFn)
+    fn()
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
+  }
+  effectFn.options = options
+  effectFn.deps = []
+  effectFn()
+}
+
+function cleanUp(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+
+const jobQueue = new Set()
+const p = Promise.resolve()
+let isFlushing = false
+
+function flushJob() {
+  if (isFlushing) return
+  isFlushing = true
+  p.then(() => {
+    jobQueue
+      .forEach(job => job())
+  }).finally(() => {
+    isFlushing = false
+  })
+}
+
+// 调用
+effect(function effectFn() {
+  console.log(obj.num)
+},{
+  scheduler(fn) {
+    jobQueue.add(fn)
+    flushJob()
+  }
+})
+
+obj.num++
+obj.num++
+
+// 没有指定调度器的情况下的输出顺序为：
+// 1. 1
+// 2. 2
+// 3. 3
+
+// 有调度器的情况下的输出顺序为：
+// 1. 1
+// 2. 3
+</script>

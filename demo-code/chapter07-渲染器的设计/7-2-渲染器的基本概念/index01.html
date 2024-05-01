@@ -1,0 +1,20 @@
+<body>
+  渲染器是把虚拟DOM（vnode）渲染特性平台上的真实元素
+  渲染器把虚拟 DOM 节点渲染为真实 DOM 节点的过程叫作挂载（mount）
+  渲染器会把用户传入的 DOM 元素作为容器元素，并把内容渲染到其中。我们通常用英文 container 来表达容器。
+</body>
+<script>
+function createRenderer() {
+  function render(vnode, container) {}
+  function hydrate(vnode, container) {}
+    
+  return {
+    render,
+    hydrate
+  }
+}
+
+const renderer = createRenderer()
+renderer.render(vnode, document.getElementById('app'))
+
+</script>

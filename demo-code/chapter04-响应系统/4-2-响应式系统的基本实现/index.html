@@ -1,0 +1,35 @@
+<body>
+  
+</body>
+<script>
+  // 响应式系统的基本实现，set， get
+    
+  // 存储副作用函数的桶
+  const bucket = new Set()
+  const data = { text: 'hello world' }
+  
+  const obj = new Proxy(data, {
+    get(target, key) {
+      console.log(target);
+      bucket.add(effect)
+      return target[key]
+    },
+    set(target, key, newVal) {
+      target[key] = newVal
+      bucket.forEach(fn => fn())
+      return true
+    }
+  })
+  
+  // 副作用函数
+  function effect() {
+    document.body.innerText = obj.text
+  }
+  
+  effect() // 执行副作用函数  
+  
+  setTimeout(() => {
+    obj.text = 'hello vue3'
+  }, 2000)
+  
+  </script>

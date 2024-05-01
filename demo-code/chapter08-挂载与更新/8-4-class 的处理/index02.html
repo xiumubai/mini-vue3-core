@@ -1,0 +1,19 @@
+<body>
+  <div :class="cls"></div>
+
+</body>
+<script>
+const cls = {
+  foo: true,
+  bar: true
+}
+const vnode = {
+  type: 'div',
+  props: {
+    class: {
+      foo: true,
+      baz: true,
+    }
+  }
+}
+</script>

@@ -1,0 +1,16 @@
+<body></body>
+<!-- Reflect -->
+<script>
+const obj = { 
+  foo: 1,
+  get bar() {
+    return this.foo
+  }
+}
+
+console.log(obj.foo);
+// 等价于
+console.log(Reflect.get(obj, 'bar'));
+console.log(Reflect.get(obj, 'bar', { foo: 2 }));
+
+</script>

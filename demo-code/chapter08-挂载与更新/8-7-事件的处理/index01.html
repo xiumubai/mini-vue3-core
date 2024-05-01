@@ -1,0 +1,17 @@
+<body>
+  如何处理事件，包括如何在虚拟节点中描述事件，如何把事件添加到DOM 元素上，以及如何更新事件
+</body>
+<script>
+// 在 vnode.props 对象中，凡是以字符串 on 开头的属性都视作事件
+const vnode = {
+  type: 'div',
+  props: {
+    onClick: () => {
+      alert('clicked')
+    }
+  },
+  children: 'text'
+}
+
+// 将事件添加到 DOM 元素上。只需要在 patchProps 中调用 addEventListener 函数来绑定事件即可，
+</script>

@@ -1,0 +1,20 @@
+<body>
+  如何代理 Set 和 Map
+</body>
+<script>
+  // 普通对象的读取和设置操作
+  const obj = { foo: 1}
+  obj.foo
+  obj.foo = 2
+  // Map对象
+  const map = new Map()
+  map.set('key', 1)
+  map.get('key', 1)
+
+  // 代理
+  const p = reative(new Map([['key', 1]]))
+  effect(() => {
+    console.log(p.get('key'))
+  })
+  p.set('key', 2)
+</script>

@@ -1,0 +1,13 @@
+<body>toRef写值</body>
+<script>
+const obj = reactive({ foo: 1, bar: 1 })
+const newObj = { ...toRefs(obj)}
+// 由于 toRefs 会把响应式数据的第一层属性值转换为 ref，
+// 因此必须通过 value 属性访问值
+console.log(newObj.foo.value)
+console.log(newObj.bar.value)
+
+// 而用户在template中使用的时候这样使用的
+// <p>{{ foo }}</p>
+// 所以要支持自动脱ref
+</script>

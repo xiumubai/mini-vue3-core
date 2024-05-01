@@ -1,0 +1,114 @@
+<body>
+  <div id="app"></div>
+</body>
+<!-- 属性渲染相关的核心逻辑 -->
+<script>
+function createRenderer(options) {
+  const {
+    createElement,
+    setElementText,
+    insert,
+    patchProps,
+  } = options
+
+  function mountElement(vnode, container) {
+    const el = createElement(vnode.type)
+    if (typeof vnode.children === 'string') {
+      // 字符串直接作为文本节点
+      setElementText(el, vnode.children)
+    } else if (Array.isArray(vnode.children)) {
+      // 递归挂载子节点
+      vnode.children.forEach(child => {
+        patch(null, child, el) 
+      })
+    }
+
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        const value = vnode.props[key]
+        patchProps(el, key, null, value)
+      }
+    }
+    insert(el, container)
+  }
+
+  function patch(n1, n2, container) {
+    if (!n1) {
+      // 首次挂载
+      mountElement(n2, container)
+    } else {
+      // ...
+    }
+  }
+
+  function render(vnode, container) {
+    if (vnode) {
+      // container._vnode是旧的vnode
+      patch(container._vnode, vnode, container)
+    } else {
+      if (container._vnode) {
+        // 旧的vnode存在，且新的vnode不存在，说明是卸载操作
+        // unmount(container._vnode)
+        container.innerHTML = ''
+        // 直接这样卸载的缺陷：
+        // 1.容器的内容可能是由某个或多个组件渲染的，当卸载操作发生时，应该正确地调用这些组件的 beforeUnmount、unmounted 等生命周期函数。
+        // 2.即使内容不是由组件渲染的，有的元素存在自定义指令，我们应该在卸载操作发生时正确执行对应的指令钩子函数。
+        // 3.使用 innerHTML 清空容器元素内容的另一个缺陷是，它不会移除绑定在 DOM 元素上的事件处理函数。
+
+        // 正确的卸载方式是，根据 vnode 对象获取与其相关联的真实 DOM 元素，
+        // 然后使用原生 DOM 操作方法将该 DOM 元素移除。
+        // 为此，我们需要在 vnode 与真实 DOM 元素之间建立联系
+      }
+    }
+    container._vnode = vnode
+  }
+    
+  return {
+    render,
+  }
+}
+
+function shouldSetAsProps(el, key, value) {
+  if (key === 'form' && el.tagName === 'INPUT') return false
+  return key in el
+}
+
+const renderer = createRenderer({
+  createElement(tag) {
+    return document.createElement(tag)
+  },
+  setElementText(el, text) {
+    el.textContent = text
+  },
+  insert(el, parent, anchor = null) {
+    parent.insertBefore(el, anchor)
+  },
+  patchProps(el, key, prevValue, nextValue) {
+    if (key === 'class') {
+      el.className = nextValue || ''
+    } else if (shouldSetAsProps(el, key, nextValue)) {
+      const type = typeof el[key]
+      if (type === 'boolean' && nextValue === '') {
+        el[key] = true
+      } else {
+        el[key] = nextValue
+      }
+    } else {
+      el.setAttribute(key, nextValue)
+    }
+  }
+})
+const vnode = {
+  type: 'div',
+  props: {
+    class: 'foo bar baz'
+  },
+  children: 'class'
+}
+// 初次挂载
+renderer.render(vnode, document.getElementById('app'))
+// vnode为null，将触发卸载操作
+setTimeout(() => {
+  renderer.render(null, document.getElementById('app'))
+}, 2000)
+</script>

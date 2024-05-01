@@ -1,0 +1,38 @@
+<body></body>
+<!-- 基础实现缺陷一：访问不存在的属性，也会触发副作用函数 -->
+<script>
+const bucket = new Set()
+const data = { text: 'hello world' }
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    if (activeEffect) {
+      bucket.add(activeEffect)
+    }
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    bucket.forEach(fn => fn())
+    return true
+  }
+})
+
+let activeEffect
+
+// 副作用函数
+function effect(fn) {
+  activeEffect = fn
+  fn()
+}
+
+// 调用
+effect(() => {
+  document.body.innerText = obj.text
+})
+
+setTimeout(() => {
+  obj.text2 = 'hello vue3'
+}, 2000)
+  
+  </script>

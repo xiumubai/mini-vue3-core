@@ -1,0 +1,31 @@
+<body>
+</body>
+<script>
+
+// 如果用一个对象进行包裹
+const warp = {
+  value: 'hello'
+}
+const name = reactive(wrap)
+name.value = 'vue3' // 这样我们就可以进行拦截了
+
+// 但是有缺点：
+// 1.用户为了创建一个响应式的原始值，不得不顺带创建一个包裹对象；
+// 2.包裹对象由用户定义，而这意味着不规范。用户可以随意命名，例如wrapper.value、wrapper.val 都是可以的。
+
+// 解决方案：将包裹对象的创建工作都封装到一个ref函数中：
+function ref(val) {
+  const warpper = {
+    value: val
+  }
+  return reactive(warpper)
+}
+
+// 这样我们就可以创建一个响应式的原始值了：
+const name = ref('hello')
+effect(() => {
+  console.log(name.value)
+})
+name.value = 'vue3' // 这样我们就可以进行拦截了
+
+</script>

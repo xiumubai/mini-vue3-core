@@ -1,0 +1,29 @@
+<body>
+  如何代理 Set 和 Map
+</body>
+<script>
+  // 普通对象的读取和设置操作
+  const m = new Map([
+    ['foo', 1],
+    ['bar', 2],
+  ])
+
+  for(const [key, value] of m.entries()) {
+    console.log(key, value);
+  }
+
+  console.log('================');
+  for(const [key, value] of m) {
+    console.log(key, value);
+  }
+  console.log('================');
+
+  const str = m[Symbol.iterator]();
+  console.log(str.next());
+  console.log(str.next());
+  console.log(str.next());
+  console.log('================');
+
+  console.log(m[Symbol.iterator] === m.entries);
+  
+</script>

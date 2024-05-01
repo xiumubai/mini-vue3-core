@@ -1,0 +1,47 @@
+<body></body>
+<!-- 基础实现缺陷二：未修改的属性，也会触发对应的副作用函数 -->
+<script>
+// 存储副作用函数的桶
+const bucket = new Set()
+const data = { text: 'hello world', val: '123' }
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    if (activeEffect) {
+      bucket.add(activeEffect)
+    }
+    
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    console.log(bucket);
+    bucket.forEach(fn => fn())
+    return true
+  }
+})
+
+let activeEffect
+
+// 副作用函数
+function effect(fn) {
+  activeEffect = fn
+  fn()
+}
+
+// 调用
+effect(() => {
+  document.body.innerText = obj.text
+})
+
+// 调用
+effect(() => {
+  // 会打印几次？？？
+  console.log('val', obj.val);
+})
+
+setTimeout(() => {
+  obj.text = 'hello vue3'
+}, 2000)
+  
+  </script>

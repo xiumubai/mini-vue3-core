@@ -1,0 +1,91 @@
+<body></body>
+<!-- 需要调度的场景 -->
+<script>
+const data = { num: 1 }
+const bucket = new WeakMap()
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    track(target, key)
+    // 返回属性值
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    trigger(target, key)
+  }
+})
+
+function track(target, key) {
+  if (!activeEffect) return
+  let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  }
+  deps.add(activeEffect)
+  activeEffect.deps.push(deps)
+}
+
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set()
+    effects && effects.forEach(effectFn => {
+      // 如果trigger执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn)
+      }
+    })
+    effectsToRun && effectsToRun.forEach(fn => fn())
+    // effects && effects.forEach(fn => fn())
+}
+
+let activeEffect // 当前正在执行的副作用函数
+const effectStack = []
+// 副作用函数
+function effect(fn) {
+  const effectFn = () => {
+    cleanUp(effectFn)
+    activeEffect = effectFn
+    effectStack.push(effectFn)
+    fn()
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
+  }
+  effectFn.deps = []
+  effectFn()
+}
+
+function cleanUp(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+
+// 调用
+effect(function effectFn() {
+  console.log(obj.num)
+})
+
+obj.num++
+console.log('执行结束了');
+
+// 正确的执行顺序为
+// 1. 执行effectFn，输出1
+// 2. 执行effectFn，输出2
+// 3. 输出执行结束了
+
+// 现在用户想要的用户为
+// 1. 执行effectFn，输出1
+// 2. 输出执行结束了
+// 3. 执行effectFn，输出2
+
+</script>

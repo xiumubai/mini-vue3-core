@@ -1,0 +1,29 @@
+<body></body>
+<!-- Proxy -->
+<script>
+// 代理对象
+const data = { foo: 1 }
+const obj = new Proxy(data, {
+  get(target, key, reciver) {
+    console.log('get', key)
+    return target[key]
+  },
+  set(target, key, value, reciver) {
+    console.log('set', key, value)
+    target[key] = value
+  }
+})
+console.log(obj.foo);
+obj.foo = 2;
+
+// 代理函数
+const fn = (name) => {console.log(name)}
+const proxyFn = new Proxy(fn, {
+  apply(target, thisArg, argumentsList) {
+    return target.call(thisArg, ...argumentsList)
+  }
+})
+proxyFn('proxy')
+
+
+</script>

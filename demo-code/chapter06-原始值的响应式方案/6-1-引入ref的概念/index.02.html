@@ -1,0 +1,19 @@
+<body>
+</body>
+<script>
+  let str = 'hello'
+  str = 'vue3'
+  // 这样的修改无法做到拦截
+
+  // 如果用一个对象进行包裹
+  const warp = {
+    str: 'hello'
+  }
+  const name = reactive(wrap)
+  name.str = 'vue3' // 这样我们就可以进行拦截了
+
+  // 但是有缺点：
+  // 1.用户为了创建一个响应式的原始值，不得不顺带创建一个包裹对象；
+  // 2.包裹对象由用户定义，而这意味着不规范。用户可以随意命名，例如wrapper.value、wrapper.val 都是可以的。
+
+</script>

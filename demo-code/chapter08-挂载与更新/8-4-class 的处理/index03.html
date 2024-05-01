@@ -1,0 +1,23 @@
+<body>
+  <div :class="arr"></div>
+
+</body>
+<script>
+const arr = [
+  'foo bar',
+  {
+    baz: true,
+  }
+]
+const vnode = {
+  type: 'div',
+  props: {
+    class: [
+      'foo bar',
+      {
+        baz: true,
+      }
+    ]
+  }
+}
+</script>

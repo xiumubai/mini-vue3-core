@@ -1,0 +1,27 @@
+<body></body>
+<script>
+const obj = {
+  val: 0,
+  [Symbol.iterator]() {
+    return {
+      next() {
+        return {
+          value: obj.val++,
+          done: obj.val > 10
+        }
+      }
+    }
+  }
+}
+
+for(let i of obj) {
+  console.log(i)
+}
+
+console.log('==========================');
+
+const arr = [1,2,3,4,5]
+for (const value of arr) {
+  console.log(value);
+}
+</script>

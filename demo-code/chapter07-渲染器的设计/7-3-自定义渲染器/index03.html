@@ -1,0 +1,74 @@
+<body>
+  <div id="app"></div>
+</body>
+<!-- 封装不依赖浏览器API，更加灵活 -->
+
+<script>
+function createRenderer(options) {
+  const {
+    createElement,
+    setElementText,
+    insert,
+  } = options
+
+  function mountElement(vnode, container) {
+    const el = createElement(vnode.type)
+    if (typeof vnode.children === 'string') {
+      // 字符串直接作为文本节点
+      setElementText(el, vnode.children)
+    }
+    insert(el, container)
+  }
+
+  function patch(n1, n2, container) {
+    if (!n1) {
+      // 首次挂载
+      mountElement(n2, container)
+    } else {
+      // ...
+    }
+  }
+
+  function render(vnode, container) {
+    if (vnode) {
+      // container._vnode是旧的vnode
+      patch(container._vnode, vnode, container)
+    } else {
+      if (container._vnode) {
+        // 旧的vnode存在，且新的vnode不存在，说明是卸载操作
+        // unmount(container._vnode)
+        container.innerHTML = ''
+      }
+    }
+    container._vnode = vnode
+  }
+    
+  return {
+    render,
+  }
+}
+
+
+const vnode = {
+  type: 'h1',
+  children: 'hello'
+}
+
+const renderer = createRenderer({
+  createElement(tag) {
+    console.log(`创建元素${tag}`);
+    return { tag }
+  },
+  setElementText(el, text) {
+    console.log(`设置元素${el.tag}的文本内容为${text}`);
+    el.textContent = text
+  },
+  insert(el, parent, anchor = null) {
+    console.log(`插入元素${el.tag}到父元素${parent.type}`);
+    parent.children = el
+  }
+})
+
+const container = { type: 'root' }
+renderer.render(vnode, container)
+</script>

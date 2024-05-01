@@ -1,0 +1,13 @@
+<body></body>
+<script>
+const obj = { foo: 1 }
+const p = new Proxy(obj, {
+  deleteProperty(target, prop) {
+    return Reflect.deleteProperty(target, prop)
+  }
+})
+// 要想通过代理对象p删除原始对象obj上的foo属性，就需要使用Reflect.deleteProperty
+delete p.foo
+console.log(p.foo); // undifined
+console.log(obj.foo); // undifined
+</script>

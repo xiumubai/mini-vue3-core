@@ -1,0 +1,31 @@
+<body>
+  <div :class="arr"></div>
+
+</body>
+<script>
+const arr = [
+  'foo bar',
+  {
+    baz: true,
+  }
+]
+const vnode = {
+  type: 'div',
+  props: {
+    class: normalizeClass(arr)
+  }
+}
+
+// 等价于
+const vnode2 = {
+  type: 'div',
+  props: {
+    class: 'foo bar baz'
+  }
+}
+
+// 三种方式可以设置class
+// setAttribute,className,classList
+// className方式的性能最优
+
+</script>

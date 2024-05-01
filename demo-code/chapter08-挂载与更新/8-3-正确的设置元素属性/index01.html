@@ -1,0 +1,17 @@
+<body>
+  <button id="myButton">禁用按钮</button>
+  <button disabled>禁用按钮2</button>
+</body>
+<script>
+const vnode = {
+  type: 'button',
+  props: {
+    disabled: ''
+  }
+}
+const el = document.querySelector('#myButton')
+// el.setAttribute('disabled', '')
+// el.setAttribute('disabled', false) // 这里的false会被转化成'false',被视做true
+// el.disabled = false
+el.disabled = 'false' // 这里的'false'会被转化成true
+</script>

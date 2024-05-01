@@ -1,0 +1,173 @@
+<body></body>
+<!-- 拦截for in: 添加新对象，for in 需要再次执行 -->
+<script>
+const data = { 
+  foo: 1
+}
+
+const bucket = new WeakMap()
+const ITERATE_KEY = Symbol()
+
+const p = new Proxy(data, {
+  get(target, key, receiver) {
+    track(target, key)
+    // 返回属性值
+    return Reflect.get(target, key, receiver)
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    trigger(target, key)
+  },
+  has(target, key) {
+    track(target, key)
+    return Reflect.has(target, key)
+  },
+  ownKeys(target) {
+    track(target, ITERATE_KEY)
+    return Reflect.ownKeys(target)
+  }
+})
+
+function track(target, key) {
+  if (!activeEffect) return
+  let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  }
+  deps.add(activeEffect)
+  activeEffect.deps.push(deps)
+}
+
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set()
+    effects && effects.forEach(effectFn => {
+      // 如果trigger执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn)
+      }
+    })
+    effectsToRun && effectsToRun.forEach(effectFn => {
+      if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn)
+      } else {
+        effectFn()
+      }
+    })
+}
+
+let activeEffect // 当前正在执行的副作用函数
+const effectStack = []
+// 副作用函数
+function effect(fn, options = []) {
+  const effectFn = () => {
+    cleanUp(effectFn)
+    activeEffect = effectFn
+    effectStack.push(effectFn)
+    const res = fn()
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
+    return res
+  }
+  effectFn.options = options
+  effectFn.deps = []
+  if (!options.lazy) {
+    effectFn()
+  }
+  return effectFn
+}
+
+function cleanUp(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+
+function computed(getter) {
+  let value
+  // 定义一个dirty变量，用来记录计算属性的状态,true则需要重新计算
+  let dirty = true
+
+  const effectFn = effect(getter, {
+    lazy: true,
+    scheduler() {
+      dirty = true
+      trigger(obj, 'value')
+    }
+  })
+  const obj = {
+    get value() {
+      if (dirty) {
+        value = effectFn()
+        dirty = false
+      }
+      track(obj, 'value')
+      return value
+    }
+  }
+  return obj
+}
+
+function watch(source, cb, options = {}) {
+  let getter
+  if (typeof source === 'function') {
+    getter = source
+  } else {
+    getter = () => traverse(source)
+  }
+
+  let oldValue, newValue
+  let cleanUp
+
+  function onInvalidate(fn) {
+    cleanUp = fn
+  }
+  const job = () => {
+    newValue = effectFn()
+    if (cleanUp) {
+      cleanUp()
+    }
+    cb(newValue, oldValue, onInvalidate)
+    oldValue = newValue
+  }
+
+  const effectFn = effect(
+    () => getter(),
+    {
+      lazy: true,
+      scheduler: job
+    }
+  )
+  if (options && options.immediate) {
+    job()
+  } else {
+    oldValue = effectFn()
+  }
+}
+
+function traverse(value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return
+  seen.add(value)
+  for (const k in value) {
+    traverse(value[k], seen)
+  }
+  return value
+}
+
+effect(() => {
+  for(const key in p) {
+    console.log('key:', key);
+  }
+})
+
+p.bar = 2
+</script>

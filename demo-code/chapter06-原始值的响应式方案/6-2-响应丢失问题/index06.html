@@ -1,0 +1,28 @@
+<body>
+  响应丢失问题
+  <template>
+    <div>
+      {{ foo }}
+      {{ bar }}
+    </div>
+  </template>
+</body>
+<script>
+export default {
+  setup() {
+    const obj = reactive({
+      foo: 1,
+      bar: 2
+    })
+
+    // 1s后修改数据，不会重新渲染
+    setTimeout(() => {
+      obj.foo++
+      obj.bar++
+    }, 1000)
+    return {
+      ...obj // 会导致响应丢失
+    }
+  }
+}
+</script>

@@ -1,0 +1,86 @@
+<body></body>
+<!-- 嵌套的 effect 与 effect 栈 -->
+<script>
+const data = { foo: true, bar: true }
+const bucket = new WeakMap()
+
+const obj = new Proxy(data, {
+  get(target, key) {
+    track(target, key)
+    // 返回属性值
+    return target[key]
+  },
+  set(target, key, newVal) {
+    target[key] = newVal
+    trigger(target, key)
+  }
+})
+
+function track(target, key) {
+  if (!activeEffect) return
+  let depsMap = bucket.get(target)
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()))
+  }
+
+  let deps = depsMap.get(key)
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()))
+  }
+  deps.add(activeEffect)
+  activeEffect.deps.push(deps)
+}
+
+function trigger(target, key) {
+  const depsMap = bucket.get(target)
+    if (!depsMap) return
+    const effects = depsMap.get(key)
+    const effectsToRun = new Set(effects)
+    effectsToRun && effectsToRun.forEach(fn => fn())
+    // effects && effects.forEach(fn => fn())
+}
+
+let activeEffect
+
+// 副作用函数
+function effect(fn) {
+  const effectFn = () => {
+    cleanUp(effectFn)
+    activeEffect = effectFn
+    fn()
+  }
+  effectFn.deps = []
+  effectFn()
+}
+
+function cleanUp(effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    const deps = effectFn.deps[i];
+    deps.delete(effectFn)
+  }
+  effectFn.deps.length = 0
+}
+
+let temp1, temp2
+
+// 调用
+effect(function effectFn1() {
+  console.log('effect1 run');
+  effect(function effectFn2() {
+    console.log('effect2 run');
+    temp2 = obj.bar
+  })
+  temp1 = obj.foo
+})
+
+// 我们希望当修改 obj.foo 时会触发 effectFn1 执行。
+// 由于 effectFn2 嵌套在 effectFn1 里，所以会间接触发 effectFn2 执行，
+// 而当修改 obj.bar 时，只会触发effectFn2 执行
+// 事实上，当修改obj.foo时，只会触发effectFn2 执行
+// 问题是activeEffect所存储的副作用函数只能有一个，当副作用函数发生嵌套时，
+// 内层副作用函数的执行会覆盖 activeEffect 的值，并且永远不会恢复到原来的值
+setTimeout(() => {
+  obj.foo = false
+}, 2000)
+
+</script>

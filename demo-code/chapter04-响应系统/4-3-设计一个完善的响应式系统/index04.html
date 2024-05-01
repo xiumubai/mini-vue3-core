@@ -1,0 +1,45 @@
+<body></body>
+<!-- 
+数据结构
+ -->
+<script>
+const data = { text: 'hello world' }
+
+let activeEffect
+// 副作用函数
+function effect(fn) {
+  activeEffect = fn
+  fn()
+}
+
+// target->text->effectFn
+effect(function effectFn() {
+  console.log(obj.text)
+})
+
+// target->text->effectFn1
+// target->text->effectFn2
+effect(function effectFn1() {
+  console.log(obj.text)
+})
+
+effect(function effectFn2() {
+  console.log(obj.text)
+})
+
+// target->text->effectFn
+// target->val->effectFn
+effect(function effectFn() {
+  console.log(obj.text)
+  console.log(obj.val)
+})
+
+// target->text->effectFn1
+// target->val->effectFn2
+effect(function effectFn1() {
+  console.log(obj.text)
+})
+effect(function effectFn2() {
+  console.log(obj.val)
+})
+</script>
