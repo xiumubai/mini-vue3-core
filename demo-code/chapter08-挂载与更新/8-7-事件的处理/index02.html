@@ -1,7 +1,7 @@
 <body>
   <div id="app"></div>
 </body>
-<!-- 属性渲染相关的核心逻辑 -->
+<!-- 事件的绑定 -->
 <script>
 function createRenderer(options) {
   const {
@@ -32,35 +32,47 @@ function createRenderer(options) {
     insert(el, container)
   }
 
+  function patchElement(n1, n2) {
+    const el = n2.el = n1.el
+    const oldProps = n1.props
+    const newProps = n2.props
+    
+    for (const key in newProps) {
+      if (newProps[key] !== oldProps[key]) {
+        patchProps(el, key, oldProps[key], newProps[key])
+      }
+    }
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        patchProps(el, key, oldProps[key], null)
+      }
+    }
+  }
+
+  function unmount(vnode) {
+    const parent = vnode.el.parentNode
+    if (parent) {
+      parent.removeChild(vnode.el)
+    }
+  }
+
   function patch(n1, n2, container) {
     if (n1 && n1.type !== n2.type) {
       unmount(n1)
       n1 = null
     }
-    const type = { n2 }
+    const { type }  = n2
 
     if (typeof type === 'string') {
       if (!n1) {
         // 首次挂载
         mountElement(n2, container)
       } else {
-        // TODO 
-        // patchElement(n1, n2)
+        patchElement(n1, n2)
       }
     } else if (typeof type === 'object') {
-      // 描述的是对象
+      // 组件
       // TODO 
-    } else if (typeof type === 'xxx'){
-      // 描述的其他类型
-      // TODO 
-    }
-  }
-
-  function unmount(vnode) {
-    const el = vnode.el
-    const parent = el.parentNode
-    if (parent) {
-      parent.removeChild(el)
     }
   }
 
@@ -98,7 +110,6 @@ const renderer = createRenderer({
   },
   patchProps(el, key, prevValue, nextValue) {
     if (/^on/.test(key)) {
-      // 事件处理
       const name = key.slice(2).toLowerCase()
       el.addEventListener(name, nextValue)
     } else if (key === 'class') {
@@ -116,13 +127,13 @@ const renderer = createRenderer({
   }
 })
 const vnode = {
-  type: 'div',
+  type: 'button',
   props: {
     onClick: () => {
       alert('clicked')
     }
   },
-  children: 'text'
+  children: 'click me'
 }
 // 初次挂载
 renderer.render(vnode, document.getElementById('app'))
