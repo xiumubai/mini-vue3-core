@@ -32,6 +32,30 @@ function createRenderer(options) {
     insert(el, container)
   }
 
+  function patchElement(n1, n2) {
+    const el = n2.el = n1.el
+    const oldProps = n1.props
+    const newProps = n2.props
+    
+    for (const key in newProps) {
+      if (newProps[key] !== oldProps[key]) {
+        patchProps(el, key, oldProps[key], newProps[key])
+      }
+    }
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        patchProps(el, key, oldProps[key], null)
+      }
+    }
+  }
+
+  function unmount(vnode) {
+    const parent = vnode.el.parentNode
+    if (parent) {
+      parent.removeChild(vnode.el)
+    }
+  }
+
   function patch(n1, n2, container) {
     if (n1 && n1.type !== n2.type) {
       unmount(n1)
@@ -47,18 +71,8 @@ function createRenderer(options) {
         patchElement(n1, n2)
       }
     } else if (typeof type === 'object') {
-      // 描述的是对象
+      // 组件
       // TODO 
-    } else if (typeof type === 'xxx'){
-      // 描述的其他类型
-      // TODO 
-    }
-  }
-
-  function unmount(vnode) {
-    const parent = vnode.el.parentNode
-    if (parent) {
-      parent.removeChild(vnode.el)
     }
   }
 
@@ -114,7 +128,7 @@ const vnode = {
   props: {
     class: 'foo bar baz'
   },
-  children: 'text'
+  children: 'hello'
 }
 renderer.render(vnode, document.querySelector('#app'))
 
@@ -123,8 +137,9 @@ const newVnode = {
   props: {
     id: 'foo'
   },
-  children: 'hello'
+  children: 'vue3'
 }
+// 更新操作
 setTimeout(() => {
   renderer.render(newVnode, document.querySelector('#app'))  
 }, 1000);
