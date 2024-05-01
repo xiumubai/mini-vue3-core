@@ -118,7 +118,7 @@ const renderer = createRenderer({
             invoker.value(e)
           }
           invoker.value = nextValue
-          addEventListener(name, invoker)
+          el.addEventListener(name, invoker)
         } else {
           invoker.value = nextValue
         }
